@@ -1,0 +1,5 @@
+employee_email,employee_name,employee_id,department,designation,pay_period_year,pay_period_month,basic,hra,conveyance,other_allowance,pf_deduction,tax_deduction,other_deduction,net_pay
+alice@company.com,Alice Johnson,EMP001,Engineering,Software Engineer,2024,3,50000,20000,3000,5000,6000,8000,500,63500
+bob@company.com,Bob Smith,EMP002,Finance,Accountant,2024,3,40000,16000,2000,3000,4800,5000,300,50900
+carol@company.com,Carol Davis,EMP003,HR,HR Manager,2024,3,55000,22000,3000,6000,6600,10000,500,68900
+dave@company.com,Dave Lee,EMP004,Engineering,Tech Lead,2024,3,70000,28000,3000,8000,8400,15000,600,85000

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payslip App</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:    #5468ff;
+      --blue-dk: #3a50e0;
+      --blue-lt: #e8eaff;
+      --bg:      #f4f6fb;
+      --white:   #ffffff;
+      --border:  #d8dce8;
+      --text:    #1a1d2e;
+      --muted:   #6b7280;
+      --ok-bg:   #e8fff0;
+      --ok-fg:   #1a7f4b;
+      --err-bg:  #fff0f0;
+      --err-fg:  #b91c1c;
+      --radius:  50px;
+      --card-r:  14px;
+    }
+
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); min-height: 100vh; color: var(--text); }
+
+    /* ── Header ──────────────────────────────────────────── */
+    .app-header {
+      display: flex; align-items: center;
+      padding: 16px 32px;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .logo {
+      width: 56px; height: 56px; background: var(--blue); color: #fff;
+      font-weight: 800; font-size: 1rem; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin-right: 20px; flex-shrink: 0;
+    }
+    .header-titles h1 { font-size: 1.35rem; font-weight: 800; line-height: 1.2; }
+    .header-titles p  { font-size: 0.8rem;  color: var(--blue); font-weight: 700; letter-spacing: 1.2px; }
+    .logout-btn {
+      margin-left: auto; background: none; border: 1.5px solid var(--border);
+      border-radius: var(--radius); padding: 7px 20px; cursor: pointer;
+      font-size: 0.88rem; color: var(--muted); transition: all .2s;
+    }
+    .logout-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+    /* ── Card ────────────────────────────────────────────── */
+    .card {
+      background: var(--white); border-radius: var(--card-r);
+      box-shadow: 0 4px 24px rgba(84,104,255,.08);
+      padding: 40px 44px; max-width: 540px; margin: 60px auto;
+    }
+
+    /* ── Form ────────────────────────────────────────────── */
+    .field { margin-bottom: 22px; }
+    .field label { display: block; font-weight: 700; margin-bottom: 8px; font-size: .95rem; }
+    .field input,
+    .field select {
+      width: 100%; padding: 12px 16px;
+      border: 1.5px solid var(--border); border-radius: 9px;
+      font-size: 1rem; outline: none; transition: border .2s;
+      background: var(--white); color: var(--text);
+    }
+    .field input:focus,
+    .field select:focus { border-color: var(--blue); }
+    .field input:disabled { background: #f7f8ff; color: var(--muted); }
+
+    /* OTP boxes */
+    .otp-row { display: flex; gap: 10px; }
+    .otp-box {
+      width: 50px; height: 54px; text-align: center;
+      font-size: 1.4rem; font-weight: 700;
+      border: 1.5px solid var(--border); border-radius: 9px; outline: none;
+    }
+    .otp-box:focus { border-color: var(--blue); }
+
+    /* ── Buttons ─────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 13px 30px; border: none; border-radius: var(--radius);
+      font-size: .95rem; font-weight: 700; cursor: pointer; transition: all .15s;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .btn-primary   { background: var(--blue);    color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--blue-dk); }
+    .btn-secondary { background: var(--blue-lt); color: var(--blue); }
+    .btn-secondary:hover:not(:disabled) { background: #d0d5ff; }
+    .btn-row { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn-center { text-align: center; margin-top: 8px; }
+
+    /* ── Tabs ────────────────────────────────────────────── */
+    .tabs { display: flex; gap: 10px; margin-bottom: 28px; }
+    .tab {
+      padding: 10px 26px; border-radius: var(--radius); border: none;
+      font-size: .93rem; font-weight: 700; cursor: pointer; transition: all .15s;
+    }
+    .tab.active   { background: var(--blue);    color: #fff; }
+    .tab.inactive { background: var(--blue-lt); color: var(--blue); }
+    .tab.inactive:hover { background: #d0d5ff; }
+
+    /* ── Dashboard shell ─────────────────────────────────── */
+    .dashboard { max-width: 860px; margin: 40px auto; padding: 0 20px; }
+    .welcome { font-size: 1.25rem; font-weight: 800; margin-bottom: 26px; }
+    .panel { background: var(--white); border-radius: var(--card-r);
+             box-shadow: 0 4px 24px rgba(84,104,255,.07); padding: 36px 40px; }
+
+    /* ── File drop ───────────────────────────────────────── */
+    .file-drop {
+      border: 2px dashed var(--border); border-radius: 10px;
+      padding: 28px; text-align: center; color: var(--muted);
+      cursor: pointer; transition: all .2s; margin-bottom: 20px; display: block;
+    }
+    .file-drop:hover { border-color: var(--blue); color: var(--blue); }
+    .file-drop input[type="file"] { display: none; }
+    .file-name { color: var(--blue); font-weight: 600; }
+
+    /* ── Table ───────────────────────────────────────────── */
+    .tbl-wrap { overflow-x: auto; margin-top: 18px; }
+    table.csv { width: 100%; border-collapse: collapse; font-size: .86rem; }
+    table.csv th {
+      background: var(--blue); color: #fff;
+      padding: 10px 12px; text-align: left; white-space: nowrap;
+    }
+    table.csv td { padding: 9px 12px; border-bottom: 1px solid #eef0f8; }
+    table.csv tr:nth-child(even) td { background: #f7f8ff; }
+
+    /* ── Messages ────────────────────────────────────────── */
+    .msg-ok  { background: var(--ok-bg);  color: var(--ok-fg);  border-radius: 8px; padding: 12px 18px; margin: 14px 0; }
+    .msg-err { background: var(--err-bg); color: var(--err-fg); border-radius: 8px; padding: 12px 18px; margin: 14px 0; }
+    .preview-count { color: var(--muted); font-size: .88rem; margin-top: 14px; }
+
+    /* ── PDF iframe ──────────────────────────────────────── */
+    .pdf-frame { width: 100%; height: 540px; border: 1.5px solid var(--border); border-radius: 10px; margin-top: 18px; }
+
+    /* ── Spinner ─────────────────────────────────────────── */
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2.5px solid rgba(255,255,255,.4);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Not-found ───────────────────────────────────────── */
+    .not-found { text-align: center; margin-top: 80px; color: var(--muted); font-size: 1.1rem; }
+  </style>
+</head>
+<body></body>
+</html>

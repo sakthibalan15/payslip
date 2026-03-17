@@ -1,0 +1,17 @@
+# frontend/Trunk.toml
+[build]
+target        = "index.html"
+dist          = "dist"
+public_url    = "/"
+filehash      = false
+
+[watch]
+ignore = ["target"]
+
+[serve]
+port      = 8080
+open      = false
+# Proxy API calls to the Axum backend so CORS is not needed in dev
+[[proxy]]
+rewrite = "/api"
+backend = "http://localhost:3001/api"
