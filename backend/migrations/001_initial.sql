@@ -26,14 +26,14 @@ CREATE TABLE IF NOT EXISTS payslips (
     designation      TEXT NOT NULL,
     year             INTEGER NOT NULL,
     month            INTEGER NOT NULL CHECK (month BETWEEN 1 AND 12),
-    basic            NUMERIC(14,2) NOT NULL DEFAULT 0,
-    hra              NUMERIC(14,2) NOT NULL DEFAULT 0,
-    conveyance       NUMERIC(14,2) NOT NULL DEFAULT 0,
-    other_allowance  NUMERIC(14,2) NOT NULL DEFAULT 0,
-    pf_deduction     NUMERIC(14,2) NOT NULL DEFAULT 0,
-    tax_deduction    NUMERIC(14,2) NOT NULL DEFAULT 0,
-    other_deduction  NUMERIC(14,2) NOT NULL DEFAULT 0,
-    net_pay          NUMERIC(14,2) NOT NULL DEFAULT 0,
+    basic            FLOAT8 NOT NULL DEFAULT 0.0,
+    hra              FLOAT8 NOT NULL DEFAULT 0.0,
+    conveyance       FLOAT8 NOT NULL DEFAULT 0.0,
+    other_allowance  FLOAT8 NOT NULL DEFAULT 0.0,
+    pf_deduction     FLOAT8 NOT NULL DEFAULT 0.0,
+    tax_deduction    FLOAT8 NOT NULL DEFAULT 0.0,
+    other_deduction  FLOAT8 NOT NULL DEFAULT 0.0,
+    net_pay          FLOAT8 NOT NULL DEFAULT 0.0,
     uploaded_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (employee_id, year, month)
 );
@@ -42,5 +42,5 @@ CREATE INDEX IF NOT EXISTS idx_payslips_emp ON payslips(employee_id, year, month
 
 -- Seed admin (update email after deploy)
 INSERT INTO users (id, name, email, role)
-VALUES (gen_random_uuid(), 'Admin User', 'admin@company.com', 'admin')
+VALUES (gen_random_uuid(), 'Sakthibalan', 'sakthi.talam@gmail.com', 'admin')
 ON CONFLICT (email) DO NOTHING;

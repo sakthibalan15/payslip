@@ -8,6 +8,7 @@ mod handlers;
 mod middleware;
 mod pdf;
 mod state;
+mod mailer;
 
 use axum::{middleware as axum_mw, routing::{get, post}, Router};
 use tower_http::cors::{Any, CorsLayer};
@@ -24,10 +25,11 @@ async fn main() -> anyhow::Result<()> {
 
     let cfg  = config::Config::from_env()?;
     let pool = db::create_pool(&cfg.database_url).await?;
+    let smtp = mailer::build_transport(&cfg)?;   // NEW
 
     sqlx::migrate!("./migrations").run(&pool).await?;
 
-    let state = state::AppState::new(pool, cfg);
+    let state = state::AppState::new(pool, cfg, smtp);
 
     let cors = CorsLayer::new()
         .allow_origin(Any)

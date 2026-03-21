@@ -9,8 +9,13 @@ pub async fn send_otp(
     State(state): State<AppState>,
     Json(body): Json<SendOtpRequest>,
 ) -> Result<Json<serde_json::Value>> {
+    let email = body.email.trim().to_lowercase();
+    if email.is_empty() {
+        return Err(AppError::BadRequest("Email is required".into()));
+    }
+
     let user = sqlx::query!(
-        "SELECT id FROM users WHERE email = $1", body.email
+        "SELECT id FROM users WHERE email = $1", email
     )
     .fetch_optional(&state.pool).await?
     .ok_or_else(|| AppError::BadRequest("Email not registered".into()))?;
@@ -26,10 +31,15 @@ pub async fn send_otp(
         user.id, otp, expires_at
     ).execute(&state.pool).await?;
 
-    send_otp_email(&state, &body.email, &otp).await
+    send_otp_email(&state, &email, &otp).await
         .map_err(|e| AppError::Internal(e))?;
 
-    Ok(Json(serde_json::json!({ "message": "OTP sent to your email" })))
+    let message = if state.config.smtp_skip {
+        "OTP ready (dev mode: check server logs — email not sent)".to_string()
+    } else {
+        "OTP sent to your email".to_string()
+    };
+    Ok(Json(serde_json::json!({ "message": message })))
 }
 
 /// POST /api/auth/verify-otp
@@ -37,13 +47,18 @@ pub async fn verify_otp(
     State(state): State<AppState>,
     Json(body): Json<VerifyOtpRequest>,
 ) -> Result<Json<AuthResponse>> {
+    let email = body.email.trim().to_lowercase();
+    if email.is_empty() {
+        return Err(AppError::BadRequest("Email is required".into()));
+    }
+
     let row = sqlx::query!(
         r#"SELECT u.id, u.name, u.email, u.role,
                   ot.otp, ot.expires_at, ot.used
            FROM users u
            JOIN otp_tokens ot ON ot.user_id = u.id
            WHERE u.email = $1"#,
-        body.email
+        email
     )
     .fetch_optional(&state.pool).await?
     .ok_or_else(|| AppError::BadRequest("No OTP requested for this email".into()))?;
@@ -65,22 +80,25 @@ pub async fn verify_otp(
 }
 
 async fn send_otp_email(state: &AppState, to: &str, otp: &str) -> anyhow::Result<()> {
-    use lettre::{
-        message::header::ContentType,
-        transport::smtp::authentication::Credentials,
-        AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor,
-    };
-    let email = Message::builder()
-        .from(state.config.from_email.parse()?)
-        .to(to.parse()?)
-        .subject("Your Payslip App OTP")
-        .header(ContentType::TEXT_HTML)
-        .body(format!(
-            "<p>Your OTP is: <strong>{otp}</strong></p><p>Valid for 5 minutes.</p>"
-        ))?;
-    let creds = Credentials::new(state.config.smtp_user.clone(), state.config.smtp_password.clone());
-    let mailer = AsyncSmtpTransport::<Tokio1Executor>::relay(&state.config.smtp_host)?
-        .port(state.config.smtp_port).credentials(creds).build();
-    mailer.send(email).await?;
-    Ok(())
+    if state.config.smtp_skip {
+        tracing::warn!(
+            email = %to,
+            otp = %otp,
+            "SMTP_SKIP: OTP not emailed — use this OTP to sign in"
+        );
+        return Ok(());
+    }
+
+    let mins = (state.config.otp_ttl_secs + 59) / 60;
+    let html = format!(
+        "<p>Your OTP is: <strong>{otp}</strong></p><p>Valid for {mins} minute(s).</p>"
+    );
+    crate::mailer::send_html_email(
+        &state.mailer,
+        &state.config.from_email,
+        to,
+        "Your Payslip App OTP",
+        html,
+    )
+    .await
 }

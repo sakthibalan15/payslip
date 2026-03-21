@@ -31,3 +31,4 @@ pub fn verify_token(secret: &str, token: &str) -> anyhow::Result<Claims> {
 pub fn generate_otp() -> String {
     format!("{:06}", rand::rng().random_range(0..=999999u32))
 }
+

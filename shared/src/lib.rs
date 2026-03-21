@@ -3,6 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use bigdecimal::BigDecimal;
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -38,20 +39,21 @@ pub enum UserRole {
 pub struct PayslipRecord {
     pub employee_email:   String,
     pub employee_name:    String,
-    pub employee_id:      String,
+    pub employee_id:      i32,
     pub department:       String,
     pub designation:      String,
     pub pay_period_year:  i32,
     pub pay_period_month: i32,
-    pub basic:            f64,
-    pub hra:              f64,
-    pub conveyance:       f64,
-    pub other_allowance:  f64,
-    pub pf_deduction:     f64,
-    pub tax_deduction:    f64,
-    pub other_deduction:  f64,
-    pub net_pay:          f64,
+    pub basic:            BigDecimal,
+    pub hra:              BigDecimal,
+    pub conveyance:       BigDecimal,
+    pub other_allowance:  BigDecimal,
+    pub pf_deduction:     BigDecimal,
+    pub tax_deduction:    BigDecimal,
+    pub other_deduction:  BigDecimal,
+    pub net_pay:          BigDecimal,
 }
+
 
 // ── CSV preview ───────────────────────────────────────────────────────────────
 

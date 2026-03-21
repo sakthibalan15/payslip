@@ -60,7 +60,8 @@ pub fn LoginPage() -> impl IntoView {
 
             spawn_local(async move {
                 match api::send_otp(&v).await {
-                    Ok(_) => {
+                    Ok(msg) => {
+                        auth.set_otp_send_notice.set(Some(msg));
                         auth.set_pending_email.set(Some(v));
                         navigate("/otp", Default::default());
                     }
@@ -226,6 +227,7 @@ pub fn OtpPage() -> impl IntoView {
                         }));
 
                         auth.set_pending_email.set(None);
+                        auth.set_otp_send_notice.set(None);
 
                         let path = match resp.role {
                             shared::UserRole::Admin => "/admin",
@@ -253,6 +255,12 @@ pub fn OtpPage() -> impl IntoView {
                 <label>"Email id"</label>
                 <input type="email" prop:value=email_val disabled=true />
             </div>
+
+            {move || {
+                auth.otp_send_notice.get().map(|msg| {
+                    view! { <div class="msg-ok">{msg}</div> }
+                })
+            }}
 
             <div class="field">
                 <label>"Enter OTP"</label>
