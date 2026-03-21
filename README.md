@@ -102,10 +102,37 @@ sqlx migrate run
 
 ### 2. Backend
 
+**Important:** `sqlx::query!` macros talk to Postgres **while compiling**. If you see:
+
+`error communicating with database: Connection refused`
+
+then either Postgres is not running, or `DATABASE_URL` is wrong / not exported in the same terminal where you run `cargo`.
+
 ```bash
+# From project root (or ensure DATABASE_URL is set)
+export DATABASE_URL="postgres://USER:PASSWORD@localhost/payslip_app"
 cd backend
 cargo run
 # → http://localhost:3001
+```
+
+You can load vars from `.env` for **runtime** (`dotenvy` in `main.rs`), but **Cargo/sqlx macros do not read `.env` automatically** — export `DATABASE_URL` in the shell before `cargo check` / `cargo build`, or use offline mode below.
+
+#### Compile without a running database (optional)
+
+After migrations have been applied against a real DB once:
+
+```bash
+export DATABASE_URL="postgres://..."
+cd backend
+cargo sqlx prepare --database-url "$DATABASE_URL"
+```
+
+This creates a `backend/.sqlx/` folder. Commit it, then others can build with:
+
+```bash
+export SQLX_OFFLINE=true
+cargo build -p backend
 ```
 
 ### 3. Frontend

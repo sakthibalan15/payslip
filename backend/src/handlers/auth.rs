@@ -9,8 +9,13 @@ pub async fn send_otp(
     State(state): State<AppState>,
     Json(body): Json<SendOtpRequest>,
 ) -> Result<Json<serde_json::Value>> {
+    let email = body.email.trim().to_lowercase();
+    if email.is_empty() {
+        return Err(AppError::BadRequest("Email is required".into()));
+    }
+
     let user = sqlx::query!(
-        "SELECT id FROM users WHERE email = $1", body.email
+        "SELECT id FROM users WHERE email = $1", email
     )
     .fetch_optional(&state.pool).await?
     .ok_or_else(|| AppError::BadRequest("Email not registered".into()))?;
@@ -26,7 +31,7 @@ pub async fn send_otp(
         user.id, otp, expires_at
     ).execute(&state.pool).await?;
 
-    send_otp_email(&state, &body.email, &otp).await
+    send_otp_email(&state, &email, &otp).await
         .map_err(|e| AppError::Internal(e))?;
 
     let message = if state.config.smtp_skip {
@@ -42,13 +47,18 @@ pub async fn verify_otp(
     State(state): State<AppState>,
     Json(body): Json<VerifyOtpRequest>,
 ) -> Result<Json<AuthResponse>> {
+    let email = body.email.trim().to_lowercase();
+    if email.is_empty() {
+        return Err(AppError::BadRequest("Email is required".into()));
+    }
+
     let row = sqlx::query!(
         r#"SELECT u.id, u.name, u.email, u.role,
                   ot.otp, ot.expires_at, ot.used
            FROM users u
            JOIN otp_tokens ot ON ot.user_id = u.id
            WHERE u.email = $1"#,
-        body.email
+        email
     )
     .fetch_optional(&state.pool).await?
     .ok_or_else(|| AppError::BadRequest("No OTP requested for this email".into()))?;

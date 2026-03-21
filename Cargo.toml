@@ -10,6 +10,7 @@ uuid       = { version = "1", features = ["v4", "js", "serde"] }
 getrandom  = { version = "0.2", features = ["js"] }
 tokio      = { version = "1",   features = ["full"] }
 chrono     = { version = "0.4", features = ["serde"] }
+bigdecimal = { version = "0.4", features = ["serde"] }
 thiserror  = "2"
 anyhow     = "1"
 tracing    = "0.1"
