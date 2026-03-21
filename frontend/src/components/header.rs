@@ -12,6 +12,7 @@ pub fn AppHeader(
 
     let on_logout = move |_| {
         auth.set_session.set(None);
+        auth.set_otp_send_notice.set(None);
         navigate("/login", Default::default());
     };
 

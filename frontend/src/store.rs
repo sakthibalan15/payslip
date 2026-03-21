@@ -23,6 +23,9 @@ pub struct AuthCtx {
     pub set_session:       WriteSignal<Option<Session>>,
     pub pending_email:     ReadSignal<Option<String>>,
     pub set_pending_email: WriteSignal<Option<String>>,
+    /// Shown on the OTP page after Send OTP succeeds (e.g. "OTP sent to your email").
+    pub otp_send_notice:     ReadSignal<Option<String>>,
+    pub set_otp_send_notice: WriteSignal<Option<String>>,
 }
 
 pub fn provide_auth() {
@@ -32,6 +35,7 @@ pub fn provide_auth() {
     // Leptos 0.8: signal() returns (ReadSignal, WriteSignal)
     let (session, set_session)               = signal(initial);
     let (pending_email, set_pending_email)   = signal::<Option<String>>(None);
+    let (otp_send_notice, set_otp_send_notice) = signal::<Option<String>>(None);
 
     // Persist changes to localStorage
     Effect::new(move |_| {
@@ -41,7 +45,14 @@ pub fn provide_auth() {
         }
     });
 
-    provide_context(AuthCtx { session, set_session, pending_email, set_pending_email });
+    provide_context(AuthCtx {
+        session,
+        set_session,
+        pending_email,
+        set_pending_email,
+        otp_send_notice,
+        set_otp_send_notice,
+    });
 }
 
 pub fn use_auth() -> AuthCtx {
