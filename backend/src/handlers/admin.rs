@@ -6,6 +6,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
+use bigdecimal::ToPrimitive;
 use shared::{AdminPayslipQuery, CsvPreviewResponse, PayslipRecord, UploadResponse, UserRole};
 use uuid::Uuid;
 use crate::{auth::Claims, error::{AppError, Result}, pdf, state::AppState};
@@ -54,16 +55,46 @@ pub async fn upload_csv(
                (id, employee_id, employee_name, employee_ext_id, department, designation,
                 year, month, basic, hra, conveyance, other_allowance,
                 pf_deduction, tax_deduction, other_deduction, net_pay)
-               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,
+                       $9::float8::numeric,$10::float8::numeric,$11::float8::numeric,$12::float8::numeric,
+                       $13::float8::numeric,$14::float8::numeric,$15::float8::numeric,$16::float8::numeric)
                ON CONFLICT (employee_id, year, month) DO UPDATE SET
                  basic=EXCLUDED.basic, hra=EXCLUDED.hra, conveyance=EXCLUDED.conveyance,
                  other_allowance=EXCLUDED.other_allowance, pf_deduction=EXCLUDED.pf_deduction,
                  tax_deduction=EXCLUDED.tax_deduction, other_deduction=EXCLUDED.other_deduction,
                  net_pay=EXCLUDED.net_pay"#,
-            Uuid::new_v4(), emp_id, rec.employee_name, rec.employee_id,
-            rec.department, rec.designation, rec.pay_period_year, rec.pay_period_month,
-            rec.basic, rec.hra, rec.conveyance, rec.other_allowance,
-            rec.pf_deduction, rec.tax_deduction, rec.other_deduction, rec.net_pay
+            Uuid::new_v4(),               // $1  id
+            emp_id,                        // $2  employee_id (Uuid)
+            rec.employee_name,             // $3  employee_name
+            rec.employee_id.to_string(),   // $4  employee_ext_id — i32 converted to String
+            rec.department,                // $5  department
+            rec.designation,               // $6  designation
+            rec.pay_period_year,           // $7  year
+            rec.pay_period_month,          // $8  month
+            rec.basic
+                .to_f64()
+                .ok_or_else(|| AppError::BadRequest("CSV: basic must be numeric".into()))?,
+            rec.hra
+                .to_f64()
+                .ok_or_else(|| AppError::BadRequest("CSV: hra must be numeric".into()))?,
+            rec.conveyance
+                .to_f64()
+                .ok_or_else(|| AppError::BadRequest("CSV: conveyance must be numeric".into()))?,
+            rec.other_allowance
+                .to_f64()
+                .ok_or_else(|| AppError::BadRequest("CSV: other_allowance must be numeric".into()))?,
+            rec.pf_deduction
+                .to_f64()
+                .ok_or_else(|| AppError::BadRequest("CSV: pf_deduction must be numeric".into()))?,
+            rec.tax_deduction
+                .to_f64()
+                .ok_or_else(|| AppError::BadRequest("CSV: tax_deduction must be numeric".into()))?,
+            rec.other_deduction
+                .to_f64()
+                .ok_or_else(|| AppError::BadRequest("CSV: other_deduction must be numeric".into()))?,
+            rec.net_pay
+                .to_f64()
+                .ok_or_else(|| AppError::BadRequest("CSV: net_pay must be numeric".into()))?,
         ).execute(&state.pool).await?;
     }
 
